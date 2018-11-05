@@ -1,0 +1,275 @@
+begin: data;
+	problem: initial value;
+end: data;
+
+begin: initial value;
+  initial time: 0;
+  final time: forever;
+
+  set: const real dt = 1.e-4;
+  time step: dt;
+
+	method: ms, .6;			#ORIGINAL: .6
+	# method: bdf;
+ 	# method: ms, cosine, 0., 2*pi/60, .6, half, .2;
+
+	tolerance: 1e-5;
+	max iterations: 10, at most;
+
+	derivatives tolerance: 1.e-0;
+	#derivatives coefficient: 1.e-2;
+	derivatives max iterations: 10;
+
+	# output: iterations;
+
+	nonlinear solver: newton raphson;
+	# nonlinear solver: newton raphson, modified, 3;
+	linear solver: naive, colamd;
+	# linear solver: naive, colamd, pivot factor, 1;
+	# linear solver: umfpack, cc;
+	# linear solver: klu, dir;
+
+
+end: initial value;
+
+begin: control data;
+
+	#default output: none;
+	# output results: netcdf, no text;
+	# print: all;
+
+  gravity;
+
+  structural nodes:
+  +2 # ground nodes
+	+1 # ball
+	+3 # dummy nodes
+
+  ;
+
+  rigid bodies:
+  +1 # triangle
+  ;
+
+  joints:
+  +1 # clamp
+	+1 # total
+
+  ;
+
+	forces:
+	+3 # ground reaction inputs
+	;
+
+	file drivers:
+	+1 # force inputs
+	;
+
+  output elements:
+  +1 # simulink read modules
+  ;
+
+	skip initial joint assembly;
+end: control data;
+
+
+set: integer GND = 0;
+set: integer BALL = 100;
+
+# ball mass, inertia and initial conditions
+include: "multiple_points_platform_and_ball_characteristics.set";
+#set: real XB = -5.0;
+#set: real YB = -5.0;
+#set: real ZB = 20;
+
+#set: real VXB = 0.0;
+#set: real VYB = 0.0;
+#set: real VZB = 0.0;
+
+# ball mass and inertia
+#set: real M_BALL = 14600;
+#set: real R_BALL = 0.05;
+#set: const real I_BALL = (2/5)*M_BALL*(R_BALL^2);
+
+# angles of the platform
+#set: real Phi_GND = 20.0*deg2rad;
+#set: real Theta_GND = -45.0*deg2rad;
+#set: real Psi_GND = 45.0*deg2rad;
+
+
+reference: GND,
+  reference,global,null,
+  reference,global,eye,
+  reference,global,null,
+  reference,global,null
+;
+
+reference: BALL,
+  reference,global,null,
+  reference,global,eye,
+  reference,global,null,
+  reference,global,null
+;
+
+
+
+begin: nodes;
+
+	structural: GND,static,
+	reference,GND,GND_X,GND_Y,GND_Z,
+	reference,GND,euler,
+  Phi_GND,Theta_GND,Psi_GND,
+	reference,GND,null,
+	reference,GND,null
+	;
+
+	structural: GND+1,static,
+	reference,GND,GND_X,GND_Y,GND_Z,
+	reference,GND,
+	euler,Phi_GND,Theta_GND,Psi_GND,
+	reference,GND,null,
+	reference,GND,null
+	;
+
+	structural: BALL,dynamic,
+	reference,BALL,XB,YB,ZB,
+	reference,BALL,euler,
+	PhiB,ThetaB,PsiB,
+	reference,BALL,VXB,VYB,VZB,
+	reference,BALL,OmXB,OmYB,OmZB
+	;
+
+	structural: BALL+1,dummy,
+	BALL,
+	offset,T1X,T1Y,0,
+	reference,BALL,eye;
+
+	structural: BALL+2,dummy,
+	BALL,
+	offset,T2X,T2Y,0,
+	reference,BALL,eye;
+
+	structural: BALL+3,dummy,
+	BALL,
+	offset,T3X,T3Y,0,
+	reference,BALL,eye;
+
+end: nodes;
+
+set: integer multiple_Forces_Input=1;
+begin: drivers;
+
+	include: "Output/multiple_Forces_Input.dr";
+
+end: drivers;
+
+
+begin: elements;
+
+	gravity: uniform, 0., 0., 1.,-9.81;
+
+
+	joint: GND+1, clamp,
+	  GND+1,
+	    position,node,
+	    orientation,node
+	;
+
+
+	joint: GND, total joint,
+	  GND+1,
+	    position,reference,node,null,
+	    position orientation,reference,node,eye,
+			rotation orientation,reference,node,eye,
+		GND,
+	    position,reference,node,null,
+	    position orientation,reference,node,eye,
+			rotation orientation,reference,node,eye,
+	  position constraint,
+		1,1,1,
+		component,
+		0.,0.,0.,/*
+		cosine,
+		  10*dt,
+		  pi/1,
+		  0.5/2,
+		  forever,
+			0.0,*/
+	  orientation constraint,
+		#angular velocity,angular velocity,angular velocity,
+		1,1,angular velocity,
+		component,
+		0,0,0.0
+	;
+
+	body: BALL, BALL,
+	  condense,3,
+		M_BALL/3,
+		reference,node,T1X,T1Y,0.,
+		diag,I_BALL,I_BALL,I_BALL,
+		M_BALL/3,
+		reference,node,T2X,T2Y,0.,
+		diag,I_BALL,I_BALL,I_BALL,
+		M_BALL/3,
+		reference,node,T3X,T3Y,0.,
+		diag,I_BALL,I_BALL,I_BALL;
+
+	force: GND+1, absolute,
+	  BALL,
+	    position,reference,node,T1X,T1Y,0.,
+	    component,
+			file,
+				multiple_Forces_Input,
+				1,
+				amplitude, 1,
+			file,
+			  multiple_Forces_Input,
+			  2,
+			  amplitude, 1,
+			file,
+			  multiple_Forces_Input,
+			  3,
+			  amplitude, 1
+	;
+
+	force: GND+2, absolute,
+		BALL,
+			position,reference,node,T2X,T2Y,0.,
+			component,
+			file,
+				multiple_Forces_Input,
+				4,
+				amplitude, 1,
+			file,
+				multiple_Forces_Input,
+				5,
+				amplitude, 1,
+			file,
+				multiple_Forces_Input,
+				6,
+				amplitude, 1
+	;
+
+	force: GND+3, absolute,
+		BALL,
+			position,reference,node,T3X,T3Y,0.,
+			component,
+			file,
+				multiple_Forces_Input,
+				7,
+				amplitude, 1,
+			file,
+				multiple_Forces_Input,
+				8,
+				amplitude, 1,
+			file,
+				multiple_Forces_Input,
+				9,
+				amplitude, 1
+	;
+
+
+	# output to simulink
+  include: "Output/multiple_output_positions.elm";
+
+end: elements;
