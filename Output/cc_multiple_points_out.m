@@ -15,16 +15,6 @@ ball_2 = datamov(datamov(:,1)==102,:);
 ball_3 = datamov(datamov(:,1)==103,:);
 
 
-% lx = 30;
-% ly = 30;
-
-R = eul2rotm([deg2rad(GND_psi) deg2rad(GND_theta) deg2rad(GND_phi)]);
-% gg = R*[lx -lx -lx lx
-%         ly  ly -ly -ly
-%         0  0  0  0];
-%   
-
-
 dt = 1e-3;
 N = length(ball_1);
 
@@ -36,7 +26,7 @@ for k = 1:500:N
     
     R_om = eul2rotm([deg2rad(ground(k,7)) deg2rad(ground(k,6)) deg2rad(ground(k,5))]);
     
-    gg = (ground(k,2:4)' +  R*[lx -lx -lx  lx
+    gg = (ground(k,2:4)' +  R_om*[lx -lx -lx  lx
                                     ly  ly -ly -ly
                                      0   0   0   0]);
         

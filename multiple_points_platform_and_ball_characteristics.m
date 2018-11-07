@@ -5,7 +5,7 @@ clc;
 %% MATTEO DANIELE 
 % platform characteristics creation for cc_main example
 
-% platformo position
+% platform position
 GND_X = 0.0;
 GND_Y = 0.0;
 GND_Z = 0.0;
@@ -16,30 +16,42 @@ lx = 10;
 ly = 10;
 
 % platform orientation in euler angles [deg]
-GND_phi = 0.0;
-GND_theta = 15.0;
-GND_psi = 0.0;
+PLATFORM_phi = 45.0;
+PLATFORM_theta = -25.0;
+PLATFORM_psi = 15.0;
 
 % platform stiffness and damping
 % damping factor
-mu_z = 200.0;
+mu_z = 300.0;
 % desired platform deformation at rest
 delta_z_rest = 1.e-4;
 
 % coulomb friction value (offset)
-Coulomb_friction_value = 0.01;
+Coulomb_friction_value = .5;
 % coefficient of viscous friction (gain)
 coefficient_viscous_friction = 0.05;
 % cosine flag threshold
-ctflag_threshold = 3.999;
+ctflag_threshold = 3.9;
 % local distance from ground threshold
 dz_threshold = 0;
 
+% normal reaction parameters
+ground_stiffness = 1e9;
+restitution_coefficient = 0.2;
+% flores
+dissipation_coefficient_model = 1; %2 %3
+% impact_speed_threshold
+impact_speed_threshold = 0.2;
+% reaction_force exponential
+reaction_force_exponential = 3;
+% force sign
+force_sign = -1;
+
 %% three-point mass, dimensions and initial conditions
 % initial position [m]
-XB = 3.0;
-YB = 3.0;
-ZB = 3.0;
+XB = 1.0;
+YB = 1.0;
+ZB = 15.0;
 
 % initial triangular body orientation in euler angles [deg]
 PhiB = 15.0;
@@ -69,6 +81,13 @@ RT = eul2rotm([(k-1)*2*pi/3 0.0 0.0]);
 T(:,k) =  [XB;YB;ZB] + RB*(RT*[DT; 0; 0]);
 
 end
+
+
+% bounding sphere to trigger contacts is automatically chosen as a multiple
+% of the major dimension of the platform: if the distance between
+% the ground point and the center of the body is below this value, the
+% contact verification is activated, otherwise it is completely ignored
+
 %% platform_and_ball_characteristics.set useful for MBDyn
 
 ID = fopen('multiple_points_platform_and_ball_characteristics.set','w');
@@ -78,9 +97,9 @@ fprintf(ID,strcat('set: real Platform_Height = ',num2str(ly),'; \n'));
 fprintf(ID,strcat('set: real GND_X = ',num2str(GND_X),'; \n'));
 fprintf(ID,strcat('set: real GND_Y = ',num2str(GND_Y),'; \n'));
 fprintf(ID,strcat('set: real GND_Z = ',num2str(GND_Z),'; \n'));
-fprintf(ID,strcat('set: real Phi_GND = ',num2str(GND_phi),'*deg2rad; \n'));
-fprintf(ID,strcat('set: real Theta_GND = ',num2str(GND_theta),'*deg2rad; \n'));
-fprintf(ID,strcat('set: real Psi_GND = ',num2str(GND_psi),'*deg2rad; \n'));
+fprintf(ID,strcat('set: real Phi_GND = ',num2str(PLATFORM_phi),'*deg2rad; \n'));
+fprintf(ID,strcat('set: real Theta_GND = ',num2str(PLATFORM_theta),'*deg2rad; \n'));
+fprintf(ID,strcat('set: real Psi_GND = ',num2str(PLATFORM_psi),'*deg2rad; \n'));
 fprintf(ID,'\n');
 fprintf(ID,'# platform deformation factors \n');
 fprintf(ID,strcat('set: real MU_Z = ',num2str(mu_z),'; \n'));
@@ -125,7 +144,7 @@ fclose(ID);
 
 vnorm = [VXB; VYB; VZB];%/norm([VXB VYB VZB]);
 
-R = eul2rotm([deg2rad(GND_psi) deg2rad(GND_theta) deg2rad(GND_phi)]);
+R = eul2rotm([deg2rad(PLATFORM_psi) deg2rad(PLATFORM_theta) deg2rad(PLATFORM_phi)]);
     
     gg = R*[lx -lx -lx lx
             ly  ly -ly -ly

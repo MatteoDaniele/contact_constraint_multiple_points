@@ -1,0 +1,40 @@
+# platform characteristics 
+set: real Platform_Base =10; 
+set: real Platform_Height =10; 
+set: real GND_X =0; 
+set: real GND_Y =0; 
+set: real GND_Z =0; 
+set: real Phi_GND =45*deg2rad; 
+set: real Theta_GND =-25*deg2rad; 
+set: real Psi_GND =15*deg2rad; 
+
+# platform deformation factors 
+set: real MU_Z =300; 
+set: real DELTA_Z_REST =0.0001; 
+
+# triangular object characteristics 
+set: real XB =1; 
+set: real YB =1; 
+set: real ZB =15; 
+set: real VXB =0; 
+set: real VYB =0; 
+set: real VZB =0; 
+set: real PhiB =15*deg2rad; 
+set: real ThetaB =15*deg2rad; 
+set: real PsiB =0*deg2rad; 
+set: real OmXB =0*deg2rad; 
+set: real OmYB =0*deg2rad; 
+set: real OmZB =0*deg2rad; 
+set: real T1X =2.9319; 
+set: real T1Y =1; 
+set: real T1Z =14.4824; 
+set: real T2X =0.1501; 
+set: real T2Y =2.673; 
+set: real T2Z =15.6918; 
+set: real T3X =-0.081951; 
+set: real T3Y =-0.67303; 
+set: real T3Z =14.8258; 
+
+set: real M_BALL =14600; 
+set: real R_BALL =0.05; 
+set: real I_BALL =14.6; 

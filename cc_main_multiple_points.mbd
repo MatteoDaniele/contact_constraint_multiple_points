@@ -179,27 +179,27 @@ begin: elements;
 	joint: GND, total joint,
 	  GND+1,
 	    position,reference,node,null,
-	    position orientation,reference,node,eye,
-			rotation orientation,reference,node,eye,
+	    position orientation,reference,node,euler,Phi_GND,Theta_GND,Psi_GND,
+			rotation orientation,reference,node,euler,Phi_GND,Theta_GND,Psi_GND,
 		GND,
 	    position,reference,node,null,
-	    position orientation,reference,node,eye,
-			rotation orientation,reference,node,eye,
+	    position orientation,reference,node,euler,Phi_GND,Theta_GND,Psi_GND,
+			rotation orientation,reference,node,euler,Phi_GND,Theta_GND,Psi_GND,
 	  position constraint,
 		1,1,1,
 		component,
-		0.,0.,0.,/*
+		0.,0.,#0.
 		cosine,
 		  10*dt,
 		  pi/1,
-		  0.5/2,
+		  1/2,
 		  forever,
-			0.0,*/
+			0.0,
 	  orientation constraint,
 		#angular velocity,angular velocity,angular velocity,
 		1,1,angular velocity,
 		component,
-		0,0,0.0
+		0,0,.0
 	;
 
 	body: BALL, BALL,
